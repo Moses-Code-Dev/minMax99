@@ -120,24 +120,31 @@ The MinMax99 system relies on mathematical operations to map geo-coordinates to 
 ### **3.1 Mapping Geo-Coordinates to Grid Cells**
 Geo-coordinates (latitude and longitude) are converted into grid cell coordinates using the Earth's dimensions and the defined cell resolution.
 
+The key constants used in these calculations are:
+- `EARTH_WIDTH_METERS`: Approximate equatorial circumference (40,075,000 m).
+- `EARTH_HEIGHT_METERS`: Approximate pole-to-pole distance (20,000,000 m).
+- `CELL_SIZE_METERS`: Cell resolution (500 m).
+- `NUM_COLUMNS`: Calculated as `EARTH_WIDTH_METERS / CELL_SIZE_METERS` (82,000).
+- `NUM_ROWS`: Calculated as `EARTH_HEIGHT_METERS / CELL_SIZE_METERS` (42,000).
+
 #### **Latitude and Longitude to Meters**
 - Convert longitude (\`λ\`) to the x-coordinate in meters:
 
-x = (λ + 180) × (Earth's width / 360)
+x = (λ + 180) × (EARTH_WIDTH_METERS / 360)
 
 - Convert latitude (\`φ\`) to the y-coordinate in meters:
 
-y = (Earth's height / 2) - ln(tan(π / 4 + φ × π / 360)) × (Earth's height / 2π)
+y = (EARTH_HEIGHT_METERS / 2) - ln(tan(π / 4 + φ × π / 360)) × (EARTH_HEIGHT_METERS / 2π)
 
 
 #### **Meters to Cell Coordinates**
 - Determine the column (\`x_cell\`):
 
-x_cell = floor(x / Cell size)
+x_cell = floor(x / CELL_SIZE_METERS)
 
 - Determine the row (\`y_cell\`):
 
-y_cell = floor(y / Cell size)
+y_cell = floor(y / CELL_SIZE_METERS)
 
 
 ---
@@ -230,7 +237,7 @@ The distance between two cells is approximated using the differences in their ro
 
 #### **Formula**
 
-Distance (in meters) = sqrt((Δx × Cell size)² + (Δy × Cell size)²)
+Distance (in meters) = sqrt((Δx × CELL_SIZE_METERS)² + (Δy × CELL_SIZE_METERS)²)
 
 
 Where:
@@ -368,18 +375,19 @@ This algorithm converts geo-coordinates (latitude and longitude) into a unique c
 #### **Pseudocode**
 ```java
 function geoToCellNumber(latitude, longitude):
-    WORLD_WIDTH = 40,075,000 // Earth's circumference in meters
-    WORLD_HEIGHT = 20,000,000 // Earth's height in meters
-    CELL_SIZE = 500 // Cell size in meters
+    EARTH_WIDTH_METERS = 40,075,000 // Earth's circumference in meters
+    EARTH_HEIGHT_METERS = 20,000,000 // Earth's height in meters
+    CELL_SIZE_METERS = 500 // Cell size in meters
+    NUM_ROWS = 42000 // Number of rows in the grid
 
     // Convert longitude to x in meters
-    xMeters = (longitude + 180) × (WORLD_WIDTH / 360)
+    xMeters = (longitude + 180) × (EARTH_WIDTH_METERS / 360)
     // Convert latitude to y in meters
-    yMeters = (WORLD_HEIGHT / 2) - ln(tan(π / 4 + latitude × π / 360)) × (WORLD_HEIGHT / (2π))
+    yMeters = (EARTH_HEIGHT_METERS / 2) - ln(tan(π / 4 + latitude × π / 360)) × (EARTH_HEIGHT_METERS / (2π))
 
     // Calculate cell coordinates
-    xCell = floor(xMeters / CELL_SIZE)
-    yCell = floor(yMeters / CELL_SIZE)
+    xCell = floor(xMeters / CELL_SIZE_METERS)
+    yCell = floor(yMeters / CELL_SIZE_METERS)
 
     // Compute cell number (column-major order)
     return (xCell × NUM_ROWS) + yCell
@@ -393,13 +401,13 @@ x = 26,689,774 m, y = 9,458,465 m
 
 Step 2: Convert meters to cell coordinates:
 
-xCell = floor(26,689,774 / 500) = 53,379
+xCell = floor(26,689,774 / CELL_SIZE_METERS) = 53,379
 
-yCell = floor(9,458,465 / 500) = 18,916
+yCell = floor(9,458,465 / CELL_SIZE_METERS) = 18,916
 
 Step 3: Calculate Cell ID:
 
-Cell ID = (53,379 × 42,000) + 18,916 = 2,241,938,716
+Cell ID = (53,379 × NUM_ROWS) + 18,916 = 2,241,938,716
 
 5.2 Constructing Firebase Paths
 This algorithm generates a hierarchical path for a given cell number.
@@ -425,8 +433,8 @@ This algorithm identifies neighboring cells based on a given precision.
 Pseudocode
 ```java
 function getNeighboringCells(cellNumber, precision):
-CELL_SIZE = 500 // Grid cell size in meters
-distance = floor(precision / CELL_SIZE) // Convert precision to cell units
+CELL_SIZE_METERS = 500 // Grid cell size in meters
+distance = floor(precision / CELL_SIZE_METERS) // Convert precision to cell units
 
     // Convert cell number to x, y coordinates
     xCell = floor(cellNumber / NUM_ROWS)
@@ -459,6 +467,137 @@ Precision: 1000m²
 Neighboring Cells:
 
 [2,241,937,716, 2,241,939,716, 2,241,938,715, 2,241,938,717, ...]
+
+---
+
+### **5.4 Layer-Based Cell Retrieval**
+This section explains algorithms for retrieving cells based on "layers." In this context, a layer signifies a concentric square region around a central cell, with each layer stepping outwards at 5-kilometer intervals. This method is distinct from finding all cells within a precise radial distance (as in section 5.3) and is useful for queries where stepped, square-shaped regions are more appropriate.
+
+#### **Finding All Cells Within N Layers (`calculateCellsInLayers`)**
+This algorithm finds all cell IDs within a specified number of layers from an initial cell.
+
+##### **Pseudocode**
+```java
+function calculateCellsInLayers(initialCellID, layerNumber):
+    // Assumes constants: NUM_ROWS, NUM_COLUMNS, CELL_SIZE_METERS
+    // A "layer" here represents a 5000-meter step.
+
+    x_cell = floor(initialCellID / NUM_ROWS)
+    y_cell = initialCellID % NUM_ROWS
+
+    // Convert layerNumber to a range in cell units
+    // Each layer adds 5000m. Cell size is CELL_SIZE_METERS.
+    // So, number of cell units for the step is 5000 / CELL_SIZE_METERS
+    layer_step_in_cells = 5000 / CELL_SIZE_METERS
+    max_offset_in_cells = layerNumber * layer_step_in_cells
+
+    neighboringCellIDs = new List()
+
+    for dx_step from -max_offset_in_cells to max_offset_in_cells step layer_step_in_cells:
+        for dy_step from -max_offset_in_cells to max_offset_in_cells step layer_step_in_cells:
+            // Optional: Skip the initial cell itself if dx_step and dy_step are both 0
+            // if dx_step == 0 AND dy_step == 0:
+            //     continue
+
+            newX = x_cell + dx_step
+            newY = y_cell + dy_step
+
+            if newX >= 0 AND newX < NUM_COLUMNS AND newY >= 0 AND newY < NUM_ROWS:
+                neighboringCellID = newX * NUM_ROWS + newY
+                neighboringCellIDs.add(neighboringCellID)
+
+    return neighboringCellIDs
+```
+
+#### **Finding Cells on the Perimeter of a Specific Layer (`calculatePerimeterCellsOfLayer`)**
+This algorithm finds cell IDs that are specifically on the perimeter of a given layer number.
+
+##### **Pseudocode**
+```java
+function calculatePerimeterCellsOfLayer(initialCellID, layerNumber):
+    // Assumes constants: NUM_ROWS, NUM_COLUMNS, CELL_SIZE_METERS
+    // A "layer" here represents a 5000-meter step.
+
+    x_cell = floor(initialCellID / NUM_ROWS)
+    y_cell = initialCellID % NUM_ROWS
+
+    layer_step_in_cells = 5000 / CELL_SIZE_METERS
+    max_offset_in_cells = layerNumber * layer_step_in_cells
+
+    layerCellIDs = new List()
+
+    // Iterate to find cells at the perimeter of the square defined by max_offset_in_cells
+    for dx_step from -max_offset_in_cells to max_offset_in_cells step layer_step_in_cells:
+        for dy_step from -max_offset_in_cells to max_offset_in_cells step layer_step_in_cells:
+            // Include only if it's on the border of the square layer
+            if abs(dx_step) == max_offset_in_cells OR abs(dy_step) == max_offset_in_cells:
+                newX = x_cell + dx_step
+                newY = y_cell + dy_step
+
+                if newX >= 0 AND newX < NUM_COLUMNS AND newY >= 0 AND newY < NUM_ROWS:
+                    layerCellID = newX * NUM_ROWS + newY
+                    layerCellIDs.add(layerCellID)
+
+    return layerCellIDs
+```
+
+---
+
+### **5.5 Determining Relative Cell Position**
+This algorithm determines the relative position of a target cell with respect to a reference cell (e.g., North, South-East, Same Cell). This is useful for understanding spatial relationships between two points on the grid.
+
+#### **Pseudocode**
+```java
+function determineRelativePosition(referenceCellID, targetCellID):
+    // Assumes constants: NUM_ROWS
+
+    // Convert referenceCellID to coordinates
+    x_ref = floor(referenceCellID / NUM_ROWS)
+    y_ref = referenceCellID % NUM_ROWS
+
+    // Convert targetCellID to coordinates
+    x_target = floor(targetCellID / NUM_ROWS)
+    y_target = targetCellID % NUM_ROWS
+
+    // Determine direction
+    // Note: Assuming (0,0) is top-left.
+    // Increasing y means moving South. Increasing x means moving East.
+
+    if x_ref == x_target AND y_ref == y_target:
+        return "Same Cell"
+    else if x_ref == x_target:
+        if y_target > y_ref:
+            return "South" // Or "Bottom" if preferred for pure cardinal
+        else:
+            return "North" // Or "Top"
+    else if y_ref == y_target:
+        if x_target > x_ref:
+            return "East" // Or "Right"
+        else:
+            return "West" // Or "Left"
+    else:
+        verticalDirection = ""
+        if y_target > y_ref:
+            verticalDirection = "South"
+        else:
+            verticalDirection = "North"
+
+        horizontalDirection = ""
+        if x_target > x_ref:
+            horizontalDirection = "East"
+        else:
+            horizontalDirection = "West"
+
+        return verticalDirection + "-" + horizontalDirection // e.g., "North-East"
+```
+
+#### **Explanation of Output**
+The function returns a string indicating the relative position:
+- **"Same Cell"**: If the reference and target cells are identical.
+- **Cardinal Directions**: "North", "South", "East", "West" if the target cell is directly along one of these axes relative to the reference cell.
+- **Diagonal Directions**: Combined strings like "North-East", "South-West", etc., for cells that are diagonally positioned.
+
+---
 
 Efficiency
 Direct Lookups: Single-cell queries are instantaneous due to numeric ID indexing.
