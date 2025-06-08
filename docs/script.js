@@ -34,6 +34,12 @@ const statusMessageDisplay = document.getElementById("status-message"); // Added
 const latitudeInput = document.getElementById("latitude");
 const longitudeInput = document.getElementById("longitude");
 const submitCoordsButton = document.getElementById("submit-coords");
+const cellIdInput = document.getElementById("cell-id-input"); // Added
+const submitCellIdButton = document.getElementById("submit-cell-id"); // Added
+const lobbyZoneToggle = document.getElementById("toggle-lobby-zone-highlight"); // Added
+const neighborToggle = document.getElementById("toggle-neighbor-highlight"); // Added
+const visibleLobbiesListDisplay = document.getElementById("visible-lobbies-list"); // Added
+
 
 // Leaflet integration variables
 let leafletMap = null;
@@ -43,6 +49,13 @@ const mapToggle = document.getElementById("map-toggle");
 const leafletMapContainer = document.getElementById("leaflet-map-container");
 const zoomedLobbyHeader = document.getElementById("zoomed-lobby-header");
 
+// Global states for highlight toggles
+let showLobbyZoneHighlight = lobbyZoneToggle.checked;
+let showNeighborHighlight = neighborToggle.checked;
+
+// Global store for last target cell for highlight refreshes
+let lastTargetCol = null;
+let lastTargetRow = null;
 
 // Clear grid and recreate centered at a specific absolute cell
 function createGrid(centerCol, centerRow) {
@@ -98,6 +111,53 @@ function createGrid(centerCol, centerRow) {
             gridContainer.appendChild(cell);
         }
     }
+
+    // Display Lobby IDs
+    const centerLobbyCol = Math.floor(centerCol / 20);
+    const centerLobbyRow = Math.floor(centerRow / 20);
+
+    for (let lobbyYOffset = -1; lobbyYOffset <= 1; lobbyYOffset++) {
+        for (let lobbyXOffset = -1; lobbyXOffset <= 1; lobbyXOffset++) {
+            const currentDisplayLobbyCol = centerLobbyCol + lobbyXOffset;
+            const currentDisplayLobbyRow = centerLobbyRow + lobbyYOffset;
+            const lobbyIdString = `L-${currentDisplayLobbyCol}-${currentDisplayLobbyRow}`;
+
+            // Determine the top-left cell of this lobby
+            // These are absolute MinMax99 cell coordinates
+            const lobbyTopLeftCol = currentDisplayLobbyCol * 20;
+            const lobbyTopLeftRow = currentDisplayLobbyRow * 20;
+
+            // Find the cell element that corresponds to the top-left of this lobby, if it's visible
+            const cellElement = document.querySelector(`.cell[data-col="${lobbyTopLeftCol}"][data-row="${lobbyTopLeftRow}"]`);
+
+            if (cellElement) {
+                const lobbyIdDiv = document.createElement("div");
+                lobbyIdDiv.classList.add("lobby-id-overlay");
+                lobbyIdDiv.textContent = lobbyIdString;
+                cellElement.appendChild(lobbyIdDiv);
+            }
+        }
+    }
+}
+
+// Function to convert Cell ID to absolute coordinates
+function cellIdToCoordinates(cellId, order) {
+    let row, col;
+    if (order === "col-major") {
+        col = Math.floor(cellId / TOTAL_ROWS);
+        row = cellId % TOTAL_ROWS;
+    } else { // row-major
+        row = Math.floor(cellId / NUM_COLS);
+        col = cellId % NUM_COLS;
+    }
+    return { row, col };
+}
+
+// Function to convert absolute cell coordinates to Lat/Lon (center of cell)
+function absoluteCellToLatLon(col, row) {
+    const xMeters = (col + 0.5) * CELL_SIZE_METERS;
+    const yMeters = (row + 0.5) * CELL_SIZE_METERS;
+    return metersToLatLon(xMeters, yMeters); // metersToLatLon is already defined
 }
 
 // MinMax99 official: meter-based cell calculation
@@ -202,78 +262,91 @@ function highlightGrid(targetCol, targetRow) {
     const centerLobbyCol = Math.floor(targetCol / 20);
     const centerLobbyRow = Math.floor(targetRow / 20);
 
-    // 3x3 Lobby Zone Highlighting
+    // Update visible lobbies list
+    const visibleLobbyIds = [];
     for (let lobbyYOffset = -1; lobbyYOffset <= 1; lobbyYOffset++) {
         for (let lobbyXOffset = -1; lobbyXOffset <= 1; lobbyXOffset++) {
             const currentZoneLobbyCol = centerLobbyCol + lobbyXOffset;
             const currentZoneLobbyRow = centerLobbyRow + lobbyYOffset;
+            visibleLobbyIds.push(`L-${currentZoneLobbyCol}-${currentZoneLobbyRow}`);
+        }
+    }
+    if (visibleLobbiesListDisplay) {
+        visibleLobbiesListDisplay.textContent = visibleLobbyIds.join(", ");
+    }
 
-            const zoneLobbyStartCol = currentZoneLobbyCol * 20;
-            const zoneLobbyStartRow = currentZoneLobbyRow * 20;
+    if (showLobbyZoneHighlight) {
+        // 3x3 Lobby Zone Highlighting
+        for (let lobbyYOffset = -1; lobbyYOffset <= 1; lobbyYOffset++) {
+            for (let lobbyXOffset = -1; lobbyXOffset <= 1; lobbyXOffset++) {
+                const currentZoneLobbyCol = centerLobbyCol + lobbyXOffset;
+                const currentZoneLobbyRow = centerLobbyRow + lobbyYOffset;
 
-            const isCenterLobbyZone = lobbyXOffset === 0 && lobbyYOffset === 0;
+                const zoneLobbyStartCol = currentZoneLobbyCol * 20;
+                const zoneLobbyStartRow = currentZoneLobbyRow * 20;
 
-            for (let r = 0; r < 20; r++) { // Cells within the current lobby of the zone
-                for (let c = 0; c < 20; c++) { // Cells within the current lobby of the zone
-                    const absCol = zoneLobbyStartCol + c;
-                    const absRow = zoneLobbyStartRow + r;
+                const isCenterLobbyZone = lobbyXOffset === 0 && lobbyYOffset === 0;
 
-                    const cellElement = document.querySelector(`.cell[data-col="${absCol}"][data-row="${absRow}"]`);
-                    if (cellElement) {
-                        if (!isCenterLobbyZone) {
-                            cellElement.classList.add("surrounding-lobby-cell");
+                for (let r = 0; r < 20; r++) { // Cells within the current lobby of the zone
+                    for (let c = 0; c < 20; c++) { // Cells within the current lobby of the zone
+                        const absCol = zoneLobbyStartCol + c;
+                        const absRow = zoneLobbyStartRow + r;
+
+                        const cellElement = document.querySelector(`.cell[data-col="${absCol}"][data-row="${absRow}"]`);
+                        if (cellElement) {
+                            if (!isCenterLobbyZone) {
+                                cellElement.classList.add("surrounding-lobby-cell");
+                            }
+                            // For the center lobby zone, specific borders are applied below.
                         }
-                        // For the center lobby zone, specific borders are applied below.
-                        // No general background like "lobby-zone-cell" needed if differentiating.
                     }
+                }
+            }
+        }
+
+        // Current Lobby Border Highlighting (center lobby in the 3x3 zone)
+        const lobbyStartCol = centerLobbyCol * 20;
+        const lobbyStartRow = centerLobbyRow * 20;
+
+        for (let r = 0; r < 20; r++) { // r is row index within the lobby (0-19)
+            for (let c = 0; c < 20; c++) { // c is col index within the lobby (0-19)
+                const currentCellAbsCol = lobbyStartCol + c;
+                const currentCellAbsRow = lobbyStartRow + r;
+
+                const cellElement = document.querySelector(`.cell[data-col="${currentCellAbsCol}"][data-row="${currentCellAbsRow}"]`);
+
+                if (cellElement) {
+                    if (c === 0) cellElement.classList.add("lobby-border-left");
+                    if (c === 19) cellElement.classList.add("lobby-border-right");
+                    if (r === 0) cellElement.classList.add("lobby-border-top");
+                    if (r === 19) cellElement.classList.add("lobby-border-bottom");
                 }
             }
         }
     }
 
-    // Current Lobby Border Highlighting (center lobby in the 3x3 zone)
-    // This uses centerLobbyCol and centerLobbyRow determined above.
-    // These borders will apply to the actual center lobby.
-    const lobbyStartCol = centerLobbyCol * 20;
-    const lobbyStartRow = centerLobbyRow * 20;
-
-    for (let r = 0; r < 20; r++) { // r is row index within the lobby (0-19)
-        for (let c = 0; c < 20; c++) { // c is col index within the lobby (0-19)
-            const currentCellAbsCol = lobbyStartCol + c;
-            const currentCellAbsRow = lobbyStartRow + r;
-
-            const cellElement = document.querySelector(`.cell[data-col="${currentCellAbsCol}"][data-row="${currentCellAbsRow}"]`);
-
-            if (cellElement) {
-                if (c === 0) cellElement.classList.add("lobby-border-left");
-                if (c === 19) cellElement.classList.add("lobby-border-right");
-                if (r === 0) cellElement.classList.add("lobby-border-top");
-                if (r === 19) cellElement.classList.add("lobby-border-bottom");
-            }
-        }
-    }
-
-    // Highlight the new center cell (target cell)
+    // Highlight the new center cell (target cell) - Always active
     const centerCell = document.querySelector(`.cell[data-col="${targetCol}"][data-row="${targetRow}"]`);
     if (centerCell) {
         centerCell.classList.add("center");
     }
 
     // Highlight the 8 surrounding cells
-    for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue; // Skip the center cell itself
+    if (showNeighborHighlight) {
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue; // Skip the center cell itself
 
-            const absoluteNeighborCol = targetCol + dx;
-            const absoluteNeighborRow = targetRow + dy;
+                const absoluteNeighborCol = targetCol + dx;
+                const absoluteNeighborRow = targetRow + dy;
 
-            const neighborCell = document.querySelector(`.cell[data-col="${absoluteNeighborCol}"][data-row="${absoluteNeighborRow}"]`);
-            if (neighborCell) {
-                neighborCell.classList.add("surrounding");
+                const neighborCell = document.querySelector(`.cell[data-col="${absoluteNeighborCol}"][data-row="${absoluteNeighborRow}"]`);
+                if (neighborCell) {
+                    neighborCell.classList.add("surrounding");
+                }
             }
         }
     }
-
 }
 
 function initOrUpdateLeafletMap(centerLat, centerLon) {
@@ -420,6 +493,10 @@ document.getElementById("submit-coords").addEventListener("click", () => {
 
     const { row, col, cellId } = latLonToCell(lat, lon); // row and col are absolute here
 
+    // Store for re-highlighting on toggle change
+    lastTargetCol = col;
+    lastTargetRow = row;
+
     if (mapToggle.checked) {
         drawMinMaxOnLeaflet(row, col, lat, lon);
         gridContainer.style.display = "none";
@@ -427,9 +504,10 @@ document.getElementById("submit-coords").addEventListener("click", () => {
         if (leafletMap) leafletMap.invalidateSize();
         if(zoomedLobbyHeader) zoomedLobbyHeader.style.display = 'none';
         if(zoomedLobby) zoomedLobby.style.display = 'none';
+        if (visibleLobbiesListDisplay) visibleLobbiesListDisplay.textContent = "N/A (Map View)"; // Update info panel
     } else {
         createGrid(col, row);
-        highlightGrid(col, row);
+        highlightGrid(col, row); // This will update visibleLobbiesListDisplay
         gridContainer.style.display = "grid";
         leafletMapContainer.style.display = "none";
         if(zoomedLobbyHeader) zoomedLobbyHeader.style.display = 'block';
@@ -496,10 +574,75 @@ mapToggle.addEventListener("change", function() {
             // No valid coords, maybe init map to a default view if desired, or do nothing
             // For now, map will only appear/update if valid coords are submitted or already present
         }
-    } else {
-        gridContainer.style.display = "grid"; // Or its original display type e.g. "block"
-        zoomedLobbyHeader.style.display = "block"; // Or its original display type
-        zoomedLobby.style.display = "grid"; // Or its original display type
+        if (visibleLobbiesListDisplay) visibleLobbiesListDisplay.textContent = "N/A (Map View)";
+    } else { // Switched to Grid View
+        gridContainer.style.display = "grid";
+        zoomedLobbyHeader.style.display = "block";
+        zoomedLobby.style.display = "grid";
         leafletMapContainer.style.display = "none";
+        if (lastTargetCol !== null && lastTargetRow !== null) {
+            highlightGrid(lastTargetCol, lastTargetRow); // This will update the visible lobbies list
+        } else {
+            if (visibleLobbiesListDisplay) visibleLobbiesListDisplay.textContent = "N/A (Grid not yet loaded)";
+        }
+    }
+});
+
+// Event listener for the new "Go to Cell ID" button
+submitCellIdButton.addEventListener("click", () => {
+    const cellIdString = cellIdInput.value;
+    if (!cellIdString) {
+        showStatusMessage("Please enter a Cell ID.", "error");
+        return;
+    }
+    const parsedCellId = parseInt(cellIdString);
+
+    if (isNaN(parsedCellId) || parsedCellId < 0) {
+        showStatusMessage("Invalid Cell ID. Please enter a non-negative number.", "error");
+        return;
+    }
+
+    const selectedOrder = orderSelect.value;
+    const { row, col } = cellIdToCoordinates(parsedCellId, selectedOrder);
+
+    // Validate row and col against map boundaries
+    const maxCellIdColMajor = NUM_COLS * TOTAL_ROWS - 1;
+    const maxCellIdRowMajor = TOTAL_ROWS * NUM_COLS - 1; // Same value, but for clarity
+
+    if (selectedOrder === "col-major" && parsedCellId > maxCellIdColMajor) {
+        showStatusMessage(`Cell ID ${parsedCellId} is too large for column-major order. Max is ${maxCellIdColMajor}.`, "error");
+        return;
+    } else if (selectedOrder === "row-major" && parsedCellId > maxCellIdRowMajor) {
+        showStatusMessage(`Cell ID ${parsedCellId} is too large for row-major order. Max is ${maxCellIdRowMajor}.`, "error");
+        return;
+    }
+
+    if (row < 0 || row >= TOTAL_ROWS || col < 0 || col >= NUM_COLS) {
+        showStatusMessage(`Calculated coordinates (Row: ${row}, Col: ${col}) are out of bounds. Max Row: ${TOTAL_ROWS -1}, Max Col: ${NUM_COLS -1}. Check Cell ID and order.`, "error");
+        return;
+    }
+
+    const { lat, lon } = absoluteCellToLatLon(col, row);
+
+    latitudeInput.value = lat.toFixed(6);
+    longitudeInput.value = lon.toFixed(6);
+
+    // Simulate click on the main submit button to update grid and info
+    submitCoordsButton.click();
+    showStatusMessage("Map updated to Cell ID: " + parsedCellId, "success");
+});
+
+// Event listeners for highlight toggles
+lobbyZoneToggle.addEventListener("change", function() {
+    showLobbyZoneHighlight = this.checked;
+    if (lastTargetCol !== null && lastTargetRow !== null && !mapToggle.checked) {
+        highlightGrid(lastTargetCol, lastTargetRow);
+    }
+});
+
+neighborToggle.addEventListener("change", function() {
+    showNeighborHighlight = this.checked;
+    if (lastTargetCol !== null && lastTargetRow !== null && !mapToggle.checked) {
+        highlightGrid(lastTargetCol, lastTargetRow);
     }
 });

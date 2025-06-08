@@ -25,6 +25,16 @@
     </select>
     <label for="map-toggle" style="margin-left: 15px;">Show Map View:</label>
     <input type="checkbox" id="map-toggle" style="margin-left: 5px;">
+
+    <label for="cell-id-input" style="margin-left: 15px;">Cell ID:</label>
+    <input id="cell-id-input" type="number" placeholder="Enter Cell ID" style="margin-left: 5px;"/>
+    <button id="submit-cell-id" style="margin-left: 5px;">Go to Cell ID</button>
+    <br>
+    <label for="toggle-lobby-zone-highlight" style="margin-left: 5px; margin-top: 5px; display: inline-block;">Show 3x3 Lobby Zone:</label>
+    <input type="checkbox" id="toggle-lobby-zone-highlight" checked style="margin-left: 5px; vertical-align: middle;">
+
+    <label for="toggle-neighbor-highlight" style="margin-left: 15px; margin-top: 5px; display: inline-block;">Show Cell Neighbors:</label>
+    <input type="checkbox" id="toggle-neighbor-highlight" checked style="margin-left: 5px; vertical-align: middle;">
 </div>
 
 <div id="preset-locations" style="margin-top: 15px; margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #eee;">
@@ -50,6 +60,7 @@
     <p><strong>Geo (Lat, Lon):</strong> <span id="geo-coords"></span></p>
     <p><strong>Lobby ID:</strong> <span id="lobby-id"></span></p>
     <p><strong>DB Path:</strong> <span id="db-path"></span></p>
+    <p><strong>Visible Lobbies (9-Zone):</strong> <span id="visible-lobbies-list">N/A</span></p>
 </div>
 
 <script src="script.js"></script>
