@@ -25,7 +25,11 @@ function createGrid() {
 
 function latLonToCell(lat, lon) {
     const col = Math.floor((lon + 180) / CELL_DEGREE_SIZE);
-    const row = Math.floor((90 - lat) / CELL_DEGREE_SIZE);
+    // const row = Math.floor((90 - lat) / CELL_DEGREE_SIZE);
+    const EARTH_HEIGHT_METERS = 20000000;
+    const CELL_SIZE_METERS = 500;
+    const yMeters = (EARTH_HEIGHT_METERS / 2) - Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * (EARTH_HEIGHT_METERS / (2 * Math.PI));
+    const row = Math.floor(yMeters / CELL_SIZE_METERS);
     const cellId = row + col * TOTAL_ROWS;
     return { row, col, cellId };
 }
