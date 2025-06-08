@@ -164,6 +164,8 @@ The MinMax99 grid divides the Earth's surface into a structured layout for effic
 - **Rows**:  
   (Earth's height / Cell size = 20,000,000 m / 500 m = 42,000)
 
+*Note: The values 82,000 for columns and 42,000 for rows are specifically chosen to simplify and facilitate future calculations within the MinMax99 system.*
+
 ---
 
 <a name="total-grid-cells"></a>
