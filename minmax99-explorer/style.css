@@ -1,0 +1,101 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f4f8;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+#controls {
+    margin-bottom: 20px;
+}
+
+#controls input {
+    margin-right: 10px;
+}
+
+#controls button {
+    margin-left: 5px;
+}
+
+#grid-container {
+    display: grid;
+    grid-template-columns: repeat(100, 8px);
+    grid-template-rows: repeat(100, 8px);
+    gap: 1px;
+    margin: 20px 0;
+    overflow: auto;
+    max-height: 820px;
+    border: 1px solid #aaa;
+}
+
+.cell {
+    width: 8px;
+    height: 8px;
+    background: #dcdcdc;
+}
+
+.cell.center {
+    background-color: #4caf50;
+}
+
+.cell.surrounding {
+    background-color: #a5d6a7;
+}
+
+.cell.lobby {
+    outline: 2px solid red;
+}
+
+#info-panel {
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.lobby-border {
+    border: 2px solid red;
+}
+
+.lobby-0-0 { background-color: rgba(255, 0, 0, 0.1); }   /* top-left */
+.lobby-0-1 { background-color: rgba(255, 128, 0, 0.1); } /* top-center */
+.lobby-0-2 { background-color: rgba(255, 255, 0, 0.1); } /* top-right */
+
+.lobby-1-0 { background-color: rgba(0, 255, 0, 0.1); }   /* mid-left */
+.lobby-1-1 { background-color: rgba(0, 200, 255, 0.1); } /* center lobby */
+.lobby-1-2 { background-color: rgba(0, 128, 255, 0.1); } /* mid-right */
+
+.lobby-2-0 { background-color: rgba(128, 0, 255, 0.1); } /* bot-left */
+.lobby-2-1 { background-color: rgba(255, 0, 255, 0.1); } /* bot-center */
+.lobby-2-2 { background-color: rgba(128, 128, 128, 0.1); } /* bot-right */
+
+
+#zoomed-lobby {
+
+    display: grid;
+    grid-template-columns: repeat(20, 64px);  /* doubled from 32px */
+    grid-template-rows: repeat(20, 64px);     /* doubled from 32px */
+    gap: 1px;
+    margin-top: 16px;
+    border: 2px solid #333;
+}
+
+.zoom-cell {
+
+    width: 64px;
+    height: 64px;
+    background-color: #f9f9f9;
+    font-size: 10px;
+    text-align: center;
+    line-height: 64px; /* vertically center */
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MinMax99 Explorer</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<h1>🌍 MinMax99 Spatial Explorer</h1>
+<p>Enter your coordinates or use GPS to discover your Cell ID and Lobby.</p>
+
+<div id="controls">
+    <label>Latitude: <input id="latitude" type="number" step="0.000001" /></label>
+    <label>Longitude: <input id="longitude" type="number" step="0.000001" /></label>
+    <button id="use-location">📍 Use My Location</button>
+    <button id="submit-coords">Submit</button>
+</div>
+
+<div id="grid-container"></div>
+
+<h2>Zoomed Center Lobby</h2>
+<div id="zoomed-lobby"></div>
+
+<div id="info-panel">
+    <h2>📊 Cell Information</h2>
+    <p><strong>Cell ID:</strong> <span id="cell-id"></span></p>
+    <p><strong>Cell X,Y:</strong> <span id="cell-xy"></span></p>
+    <p><strong>Lobby ID:</strong> <span id="lobby-id"></span></p>
+    <p><strong>DB Path:</strong> <span id="db-path"></span></p>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
