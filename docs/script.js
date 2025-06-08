@@ -1,5 +1,4 @@
 const GRID_SIZE = 100;
-const CELL_DEGREE_SIZE = 0.004491556;
 const TOTAL_ROWS = 42000;
 
 const gridContainer = document.getElementById("grid-container");
@@ -23,34 +22,26 @@ function createGrid() {
     }
 }
 
-// function latLonToCell(lat, lon) {
-//     const col = Math.floor((lon + 180) / CELL_DEGREE_SIZE);
-//     // const row = Math.floor((90 - lat) / CELL_DEGREE_SIZE);
-//     const EARTH_HEIGHT_METERS = 20000000;
-//     const CELL_SIZE_METERS = 500;
-//     const yMeters = (EARTH_HEIGHT_METERS / 2) - Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * (EARTH_HEIGHT_METERS / (2 * Math.PI));
-//     const row = Math.floor(yMeters / CELL_SIZE_METERS);
-//     const cellId = row + col * TOTAL_ROWS;
-//     return { row, col, cellId };
-// }
-
+// MinMax99 official: meter-based cell calculation
 function latLonToCell(lat, lon) {
+    // MinMax99 official constants
     const EARTH_WIDTH_METERS = 40075000;
     const EARTH_HEIGHT_METERS = 20000000;
     const CELL_SIZE_METERS = 500;
     const NUM_ROWS = 42000;
 
-    // Longitude to meters
+    // Longitude to meters (X)
     const xMeters = (lon + 180) * (EARTH_WIDTH_METERS / 360);
-    // Latitude to meters (Mercator)
-    const yMeters = (EARTH_HEIGHT_METERS / 2) -
-        Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * (EARTH_HEIGHT_METERS / (2 * Math.PI));
+    // Latitude to meters (Y) using Mercator projection
+    const yMeters = (EARTH_HEIGHT_METERS / 2) - 
+        Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 360))) * 
+        (EARTH_HEIGHT_METERS / (2 * Math.PI));
 
-    // To cell indices
+    // Calculate cell indices
     const col = Math.floor(xMeters / CELL_SIZE_METERS);
     const row = Math.floor(yMeters / CELL_SIZE_METERS);
 
-    // Cell ID (column-major order)
+    // Calculate cell ID using column-major order
     const cellId = col * NUM_ROWS + row;
 
     return { row, col, cellId };
