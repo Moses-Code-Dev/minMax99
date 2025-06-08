@@ -35,7 +35,6 @@ function createGrid() {
 // }
 
 function latLonToCell(lat, lon) {
-    // MinMax99 official constants
     const EARTH_WIDTH_METERS = 40075000;
     const EARTH_HEIGHT_METERS = 20000000;
     const CELL_SIZE_METERS = 500;
@@ -45,7 +44,7 @@ function latLonToCell(lat, lon) {
     const xMeters = (lon + 180) * (EARTH_WIDTH_METERS / 360);
     // Latitude to meters (Mercator)
     const yMeters = (EARTH_HEIGHT_METERS / 2) -
-        Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 360))) * (EARTH_HEIGHT_METERS / (2 * Math.PI));
+        Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * (EARTH_HEIGHT_METERS / (2 * Math.PI));
 
     // To cell indices
     const col = Math.floor(xMeters / CELL_SIZE_METERS);
