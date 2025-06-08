@@ -96,9 +96,9 @@ h1 {
     box-sizing: border-box; /* Added */
 }
 
-/* General zone tint for the 3x3 lobby area */
-.cell.lobby-zone-cell {
-    background-color: rgba(220, 220, 255, 0.5); /* Light lavender/blue tint */
+/* New style for surrounding lobby cells */
+.cell.surrounding-lobby-cell {
+    background-color: rgba(255, 255, 0, 0.3); /* Light yellow tint */
 }
 
 /* Surrounding cells (direct neighbors of the target cell) */
@@ -164,6 +164,16 @@ h1 {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.zoom-cell.zoomed-target-cell {
+    background-color: #90EE90; /* LightGreen */
+    /* Ensure this overrides default .zoom-cell background */
+}
+
+.zoom-cell.zoomed-neighbor-cell {
+    background-color: #FFDAB9; /* PeachPuff */
+    /* Ensure this overrides default .zoom-cell background */
 }
 
 .lobby-border-left {

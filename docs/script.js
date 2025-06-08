@@ -189,7 +189,8 @@ function highlightGrid(targetCol, targetRow) {
         cell.classList.remove(
             "center",
             "surrounding",
-            "lobby-zone-cell", // Added for clearing
+            // "lobby-zone-cell", // This class will be handled differently or removed
+            "surrounding-lobby-cell", // Add new class for clearing
             "lobby-border-left",
             "lobby-border-right",
             "lobby-border-top",
@@ -210,6 +211,8 @@ function highlightGrid(targetCol, targetRow) {
             const zoneLobbyStartCol = currentZoneLobbyCol * 20;
             const zoneLobbyStartRow = currentZoneLobbyRow * 20;
 
+            const isCenterLobbyZone = lobbyXOffset === 0 && lobbyYOffset === 0;
+
             for (let r = 0; r < 20; r++) { // Cells within the current lobby of the zone
                 for (let c = 0; c < 20; c++) { // Cells within the current lobby of the zone
                     const absCol = zoneLobbyStartCol + c;
@@ -217,15 +220,20 @@ function highlightGrid(targetCol, targetRow) {
 
                     const cellElement = document.querySelector(`.cell[data-col="${absCol}"][data-row="${absRow}"]`);
                     if (cellElement) {
-                        cellElement.classList.add("lobby-zone-cell");
+                        if (!isCenterLobbyZone) {
+                            cellElement.classList.add("surrounding-lobby-cell");
+                        }
+                        // For the center lobby zone, specific borders are applied below.
+                        // No general background like "lobby-zone-cell" needed if differentiating.
                     }
                 }
             }
         }
     }
 
-    // Current Lobby Border Highlighting (center lobby)
-    // This uses centerLobbyCol and centerLobbyRow determined above
+    // Current Lobby Border Highlighting (center lobby in the 3x3 zone)
+    // This uses centerLobbyCol and centerLobbyRow determined above.
+    // These borders will apply to the actual center lobby.
     const lobbyStartCol = centerLobbyCol * 20;
     const lobbyStartRow = centerLobbyRow * 20;
 
@@ -337,8 +345,14 @@ function updateInfo({ cellId, row, col, lat, lon }) {
         geoCoordsDisplay.textContent = "N/A";
     }
 
-    const lobbyPathId = lobbyId.replace('L-', '').replace('-', '_'); // e.g., 1_3
-    dbPathDisplay.textContent = `/lobby/${lobbyPathId}/cell_${cellId}`;
+    // Calculate LEVEL1, LEVEL2, and LEVEL3 based on cellId
+    const LEVEL1 = Math.floor(cellId / 1000000);
+    const LEVEL2 = Math.floor((cellId / 1000) % 1000);
+    const LEVEL3 = cellId % 1000;
+
+    // Construct the new dbPath
+    const newDbPath = `${LEVEL1}/${LEVEL2}/${LEVEL3}/store_data`;
+    dbPathDisplay.textContent = newDbPath;
 }
 
 function renderZoomedLobby(centerRow, centerCol) { // centerRow, centerCol are absolute
@@ -365,8 +379,16 @@ function renderZoomedLobby(centerRow, centerCol) { // centerRow, centerCol are a
             }
 
             const div = document.createElement("div");
-            div.className = "zoom-cell";
+            div.className = "zoom-cell"; // Base class
             div.textContent = zoomedCellId; // Displaying the calculated cell ID
+
+            // Highlight the target cell and its neighbors
+            if (currentAbsoluteCol === centerCol && currentAbsoluteRow === centerRow) {
+                div.classList.add("zoomed-target-cell");
+            } else if (Math.abs(currentAbsoluteCol - centerCol) <= 1 && Math.abs(currentAbsoluteRow - centerRow) <= 1) {
+                div.classList.add("zoomed-neighbor-cell");
+            }
+
             // Optionally, add data attributes for absolute row/col if needed for styling/interaction
             // div.dataset.col = currentAbsoluteCol;
             // div.dataset.row = currentAbsoluteRow;
