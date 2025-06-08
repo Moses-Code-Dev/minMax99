@@ -23,14 +23,37 @@ function createGrid() {
     }
 }
 
+// function latLonToCell(lat, lon) {
+//     const col = Math.floor((lon + 180) / CELL_DEGREE_SIZE);
+//     // const row = Math.floor((90 - lat) / CELL_DEGREE_SIZE);
+//     const EARTH_HEIGHT_METERS = 20000000;
+//     const CELL_SIZE_METERS = 500;
+//     const yMeters = (EARTH_HEIGHT_METERS / 2) - Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * (EARTH_HEIGHT_METERS / (2 * Math.PI));
+//     const row = Math.floor(yMeters / CELL_SIZE_METERS);
+//     const cellId = row + col * TOTAL_ROWS;
+//     return { row, col, cellId };
+// }
+
 function latLonToCell(lat, lon) {
-    const col = Math.floor((lon + 180) / CELL_DEGREE_SIZE);
-    // const row = Math.floor((90 - lat) / CELL_DEGREE_SIZE);
+    // MinMax99 official constants
+    const EARTH_WIDTH_METERS = 40075000;
     const EARTH_HEIGHT_METERS = 20000000;
     const CELL_SIZE_METERS = 500;
-    const yMeters = (EARTH_HEIGHT_METERS / 2) - Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * (EARTH_HEIGHT_METERS / (2 * Math.PI));
+    const NUM_ROWS = 42000;
+
+    // Longitude to meters
+    const xMeters = (lon + 180) * (EARTH_WIDTH_METERS / 360);
+    // Latitude to meters (Mercator)
+    const yMeters = (EARTH_HEIGHT_METERS / 2) -
+        Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 360))) * (EARTH_HEIGHT_METERS / (2 * Math.PI));
+
+    // To cell indices
+    const col = Math.floor(xMeters / CELL_SIZE_METERS);
     const row = Math.floor(yMeters / CELL_SIZE_METERS);
-    const cellId = row + col * TOTAL_ROWS;
+
+    // Cell ID (column-major order)
+    const cellId = col * NUM_ROWS + row;
+
     return { row, col, cellId };
 }
 
