@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>MinMax99 Explorer</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 </head>
 <body>
 <h1>🌍 MinMax99 Spatial Explorer</h1>
+<div id="status-message"></div>
 <p>Enter your coordinates or use GPS to discover your Cell ID and Lobby.</p>
 
 <div id="controls">
@@ -15,21 +17,42 @@
     <label>Longitude: <input id="longitude" type="number" step="0.000001" /></label>
     <button id="use-location">📍 Use My Location</button>
     <button id="submit-coords">Submit</button>
+    <br>
+    <label for="order-select" style="margin-left: 5px;">Cell ID Order:</label>
+    <select id="order-select" style="margin-left: 5px;">
+        <option value="col-major" selected>Column-Major</option>
+        <option value="row-major">Row-Major</option>
+    </select>
+    <label for="map-toggle" style="margin-left: 15px;">Show Map View:</label>
+    <input type="checkbox" id="map-toggle" style="margin-left: 5px;">
+</div>
+
+<div id="preset-locations" style="margin-top: 15px; margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #eee;">
+    <strong>Test Locations:</strong>
+    <button class="preset-btn" data-lat="34.0522" data-lon="-118.2437" style="margin-left: 5px;">Los Angeles</button>
+    <button class="preset-btn" data-lat="40.7128" data-lon="-74.0060" style="margin-left: 5px;">New York</button>
+    <button class="preset-btn" data-lat="48.8566" data-lon="2.3522" style="margin-left: 5px;">Paris</button>
+    <button class="preset-btn" data-lat="35.6895" data-lon="139.6917" style="margin-left: 5px;">Tokyo</button>
+    <button class="preset-btn" data-lat="-33.8688" data-lon="151.2093" style="margin-left: 5px;">Sydney</button>
+    <button class="preset-btn" data-lat="0" data-lon="0" style="margin-left: 5px;">Null Island</button>
 </div>
 
 <div id="grid-container"></div>
+<div id="leaflet-map-container" style="height: 600px; width: 100%; margin-top: 20px; display: none;"></div>
 
-<h2>Zoomed Center Lobby</h2>
+<h2 id="zoomed-lobby-header">Zoomed Center Lobby</h2>
 <div id="zoomed-lobby"></div>
 
 <div id="info-panel">
     <h2>📊 Cell Information</h2>
     <p><strong>Cell ID:</strong> <span id="cell-id"></span></p>
     <p><strong>Cell X,Y:</strong> <span id="cell-xy"></span></p>
+    <p><strong>Geo (Lat, Lon):</strong> <span id="geo-coords"></span></p>
     <p><strong>Lobby ID:</strong> <span id="lobby-id"></span></p>
     <p><strong>DB Path:</strong> <span id="db-path"></span></p>
 </div>
 
 <script src="script.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </body>
 </html>

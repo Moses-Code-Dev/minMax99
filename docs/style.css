@@ -1,23 +1,81 @@
-body {
-    font-family: Arial, sans-serif;
-    background: #f0f4f8;
+body { /* General body styles */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f4f6f8; /* Lighter page background */
     padding: 20px;
+    line-height: 1.6; /* Improved readability */
 }
 
 h1 {
-    margin-bottom: 10px;
+    color: #333;
+    text-align: center; /* Center heading */
+    margin-bottom: 25px; /* More space below heading */
 }
 
-#controls {
+#status-message {
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    min-height: 1.5em;
+    text-align: center;
+    font-weight: 500; /* Medium weight */
+    border: 1px solid transparent; /* Base border */
+}
+#status-message.error {
+    background-color: #ffebee; /* Material Design Light Red */
+    color: #d32f2f;      /* Material Design Red */
+    border-color: #ef9a9a; /* Lighter red border */
+}
+#status-message.success {
+    background-color: #e8f5e9; /* Material Design Light Green */
+    color: #388e3c;      /* Material Design Green */
+    border-color: #a5d6a7; /* Lighter green border */
+}
+
+#controls, #preset-locations {
+    margin-top: 20px; /* Increased top margin */
     margin-bottom: 20px;
+    padding: 20px; /* Increased padding */
+    background-color: #ffffff; /* Changed to white */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08); /* Slightly enhanced shadow */
+    border: 1px solid #e0e0e0; /* Light border */
 }
-
-#controls input {
-    margin-right: 10px;
+#controls label, #preset-locations strong {
+    margin-right: 8px; /* Consistent margin */
+    display: inline-block;
+    margin-bottom: 8px; /* Spacing for items that might wrap */
+    font-weight: 500; /* Medium weight for labels */
 }
-
-#controls button {
-    margin-left: 5px;
+#controls input[type="number"], #controls select {
+    margin-right: 12px; /* Increased margin */
+    padding: 8px 10px; /* Increased padding */
+    border: 1px solid #bdbdbd; /* Slightly darker border */
+    border-radius: 4px;
+    box-sizing: border-box; /* Ensure padding doesn't expand element size */
+}
+#controls button, .preset-btn { /* Common styling for all buttons */
+    padding: 8px 15px; /* Increased padding */
+    border: none; /* Removed border for a flatter look */
+    border-radius: 4px;
+    background-color: #007bff; /* Primary blue */
+    color: white;
+    cursor: pointer;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    transition: background-color 0.2s ease; /* Smooth transition */
+}
+#controls button:hover, .preset-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+#controls button#use-location { /* Specific style for "Use My Location" */
+    background-color: #28a745; /* Green */
+}
+#controls button#use-location:hover {
+    background-color: #1e7e34; /* Darker green */
+}
+#map-toggle {
+    vertical-align: middle;
+    margin-left: 5px; /* Keep margin from label */
 }
 
 #grid-container {
@@ -35,16 +93,26 @@ h1 {
     width: 8px;
     height: 8px;
     background: #dcdcdc;
+    box-sizing: border-box; /* Added */
 }
 
-.cell.center {
-    background-color: #4caf50;
+/* General zone tint for the 3x3 lobby area */
+.cell.lobby-zone-cell {
+    background-color: rgba(220, 220, 255, 0.5); /* Light lavender/blue tint */
 }
 
+/* Surrounding cells (direct neighbors of the target cell) */
 .cell.surrounding {
-    background-color: #a5d6a7;
+    background-color: #ADD8E6; /* Light blue - should override lobby-zone-cell */
 }
 
+/* Center cell (target cell) */
+.cell.center {
+    background-color: #4caf50; /* Green - should override all other backgrounds */
+}
+
+/* Old .cell.lobby class, can be removed if no longer used, or kept if it serves another purpose.
+   For now, it's just an outline and doesn't conflict with background. */
 .cell.lobby {
     outline: 2px solid red;
 }
@@ -98,4 +166,16 @@ h1 {
     text-overflow: ellipsis;
 }
 
+.lobby-border-left {
+    border-left: 1px solid red;
+}
+.lobby-border-right {
+    border-right: 1px solid red;
+}
+.lobby-border-top {
+    border-top: 1px solid red;
+}
+.lobby-border-bottom {
+    border-bottom: 1px solid red;
+}
 
