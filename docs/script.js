@@ -63,7 +63,7 @@ function createGrid(centerCol, centerRow) {
             cell.addEventListener("mouseover", (event) => {
                 const col = parseInt(cell.dataset.col);
                 const row = parseInt(cell.dataset.row);
-
+                
                 let tooltipCellId;
                 const selectedOrder = orderSelect.value;
                 if (selectedOrder === "row-major") {
@@ -71,7 +71,7 @@ function createGrid(centerCol, centerRow) {
                 } else { // col-major
                     tooltipCellId = col * TOTAL_ROWS + row; // TOTAL_ROWS is NUM_ROWS
                 }
-
+                
                 const currentLobbyId = getLobbyId(row, col); // e.g., L-1-3
                 const lobbyPathId = currentLobbyId.replace('L-', '').replace('-', '_'); // e.g., 1_3
                 // DB Path in tooltip should reflect the currently selected Cell ID calculation method
@@ -233,7 +233,7 @@ function highlightGrid(targetCol, targetRow) {
         for (let c = 0; c < 20; c++) { // c is col index within the lobby (0-19)
             const currentCellAbsCol = lobbyStartCol + c;
             const currentCellAbsRow = lobbyStartRow + r;
-
+            
             const cellElement = document.querySelector(`.cell[data-col="${currentCellAbsCol}"][data-row="${currentCellAbsRow}"]`);
 
             if (cellElement) {
@@ -307,7 +307,7 @@ function drawMinMaxOnLeaflet(targetRow, targetCol, targetLat, targetLon) {
     const lobbyC = Math.floor(targetCol / 20);
     const lobbyStartRow = lobbyR * 20;
     const lobbyStartCol = lobbyC * 20;
-
+    
     // Get bounds for the entire lobby
     // SW corner of the cell at (lobbyStartRow + 19, lobbyStartCol)
     // NE corner of the cell at (lobbyStartRow, lobbyStartCol + 19)
@@ -317,7 +317,7 @@ function drawMinMaxOnLeaflet(targetRow, targetCol, targetLat, targetLon) {
 
     const lobbyRect = L.rectangle(lobbyBoundsOverall, { color: "red", weight: 2, fill: false }).addTo(leafletMap);
     leafletCellLayers.push(lobbyRect);
-
+    
     // Zoom map to fit target cell's lobby
     if (leafletMap && lobbyRect) {
          leafletMap.fitBounds(lobbyRect.getBounds().pad(0.1)); // Pad slightly
@@ -355,7 +355,7 @@ function renderZoomedLobby(centerRow, centerCol) { // centerRow, centerCol are a
             const currentAbsoluteRow = startAbsoluteRowInLobby + y;
             const currentAbsoluteCol = startAbsoluteColInLobby + x; // This is the absolute col
             const currentAbsoluteRow = startAbsoluteRowInLobby + y; // This is the absolute row
-
+            
             let zoomedCellId;
             const selectedOrder = orderSelect.value;
             if (selectedOrder === "row-major") {
@@ -410,10 +410,10 @@ document.getElementById("submit-coords").addEventListener("click", () => {
         highlightGrid(col, row);
         gridContainer.style.display = "grid";
         leafletMapContainer.style.display = "none";
-        if(zoomedLobbyHeader) zoomedLobbyHeader.style.display = 'block';
-        if(zoomedLobby) zoomedLobby.style.display = 'grid';
+        if(zoomedLobbyHeader) zoomedLobbyHeader.style.display = 'block'; 
+        if(zoomedLobby) zoomedLobby.style.display = 'grid'; 
     }
-
+    
     // These are common regardless of view
     updateInfo({ row, col, cellId, lat, lon });
     renderZoomedLobby(row, col); // This is for the abstract view, still updates but might be hidden
@@ -434,7 +434,7 @@ orderSelect.addEventListener("change", () => {
             // Update info panel (this will show new cellId and potentially new dbPath)
             updateInfo({ row, col, cellId, lat, lon });
             // Re-render zoomed lobby (Cell IDs displayed there will change)
-            renderZoomedLobby(row, col);
+            renderZoomedLobby(row, col); 
             // Tooltips will automatically update on next mouseover due to direct reading of orderSelect.value
             // No need to call createGrid() or highlightGrid() as the visual grid display (colors, borders) doesn't change based on cell ID calculation method.
         }
