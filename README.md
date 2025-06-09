@@ -601,7 +601,7 @@ distance = floor(precision / CELL_SIZE_METERS) // Convert precision to cell unit
 
 Example
 Cell Number: 2,241,938,716
-Precision: 1000m²
+Precision (search extent): 1000m (results in a 5x5 cell area)
 Neighboring Cells:
 
 [2,241,937,716, 2,241,939,716, 2,241,938,715, 2,241,938,717, ...]
@@ -788,12 +788,12 @@ The MinMax99 system ensures efficient spatial data retrieval through well-struct
 <a name="adjusting-query-precision"></a>
 #### **Adjusting Query Precision**
 - Precision determines the range of neighboring cells to include:
-    - **500 m² precision**: Query only the center cell.
-    - **1000 m² precision**: Include the center cell and its direct neighbors.
+    - **500m x 500m precision** (single cell): Query only the center cell.
+    - **1.5km x 1.5km precision (3x3 cells)**: Include the center cell and its direct neighbors.
     - **Larger regions**: Expand the range to include additional layers of neighbors.
 
 <a name="example-1000-m-precision-query"></a>
-#### **Example: 1000 m² Precision Query**
+#### **Example: 1.5km x 1.5km Precision Query (3x3 cells)**
 - **Central Cell**: `2,241,938,716`
 - **Neighbors**:
 
@@ -906,13 +906,13 @@ Cell ID = (53,379 × 42,000) + 18,916 = 2,241,938,716
 ### **7.3 Regional Query for Nearby Stores**
 <a name="scenario"></a>
 #### **Scenario**
-- The user wants to find all nearby stores within a **1000m² precision** region.
+- The user wants to find all nearby stores within a **1.5km x 1.5km precision (3x3 cells)** region.
 
 <a name="steps"></a>
 #### **Steps**
 1. **Identify Neighboring Cells**:  
 
-Center Cell ID = 2,241,938,716 Precision = 1000m² Neighbors = [2,241,937,715, 2,241,937,716, 2,241,937,717, 2,241,938,715, ...]
+Center Cell ID = 2,241,938,716 Precision = 1.5km x 1.5km (3x3 cells) Neighbors = [2,241,937,715, 2,241,937,716, 2,241,937,717, 2,241,938,715, ...]
 
 
 2. **Query Firebase**:  
@@ -1050,7 +1050,7 @@ Common spatial database approaches include:
 ### **8.2 Strengths of MinMax99**
 1. **Efficient Grid-Based Design**:
     - Simplifies spatial indexing by dividing the Earth's surface into uniform cells.
-    - Fixed resolution (500m²) eliminates the complexity of dynamic subdivisions.
+    - Fixed resolution (500m x 500m) eliminates the complexity of dynamic subdivisions.
 
 2. **Hierarchical Structure**:
     - Combines flat data storage with logical groupings for scalability.
@@ -1082,7 +1082,7 @@ Common spatial database approaches include:
 ### **8.4 Use Cases Comparison**
 | **Feature**                | **MinMax99**                         | **Quadtrees**         | **R-Trees**           | **Geohashing**       | **Z-Order Curves**   |
 |----------------------------|---------------------------------------|-----------------------|-----------------------|----------------------|----------------------|
-| **Precision**              | Fixed (500m²)                        | Adjustable            | Adjustable            | Adjustable           | Adjustable           |
+| **Precision**              | Fixed (500m x 500m)                        | Adjustable            | Adjustable            | Adjustable           | Adjustable           |
 | **Scalability**            | High, hierarchical grouping          | Medium                | High                  | High                 | High                 |
 | **Efficiency for Lookups** | Very high (direct cell lookups)       | Medium                | High                  | High                 | Medium               |
 | **Geometric Queries**      | Limited                              | High                  | Very High             | Medium               | Medium               |
@@ -1112,11 +1112,11 @@ To further optimize and enhance the MinMax99 system, the following advancements 
 
 <a name="1-higher-precision-grids"></a>
 #### **1. Higher Precision Grids**
-- Introduce a finer-resolution grid for each 500m² cell by dividing it into smaller squares (e.g., \(500 \times 500\) grid with 1m² precision).
-- Each sub-cell will have its unique ID relative to the parent 500m² cell.
+- Introduce a finer-resolution grid for each 500m x 500m cell by dividing it into smaller squares (e.g., \(500 \times 500\) grid with 1m² precision).
+- Each sub-cell will have its unique ID relative to the parent 500m x 500m cell.
 
 **Proposed Structure for 1m² Precision**:
-- Within a 500m² cell, create a \(500 \times 500\) table:
+- Within a 500m x 500m cell, create a \(500 \times 500\) table:
     - Sub-cell IDs range from `0,0` to `499,499`.
 - Use a hierarchical path to reference both the parent cell and the sub-cell:
   store_data/<parent_cell>/<sub_cell_x>/<sub_cell_y>/<store_id>
