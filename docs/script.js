@@ -29,6 +29,7 @@ const dbPathDisplay = document.getElementById("db-path");
 const zoomedLobby = document.getElementById("zoomed-lobby");
 const orderSelect = document.getElementById("order-select");
 const statusMessageDisplay = document.getElementById("status-message"); // Added
+const loadingSpinner = document.getElementById("loading-spinner"); // New line
 
 // Input and button elements for presets
 const latitudeInput = document.getElementById("latitude");
@@ -187,7 +188,16 @@ function latLonToCell(lat, lon) {
         cellId = col * TOTAL_ROWS + row; // TOTAL_ROWS is equivalent to NUM_ROWS for MinMax99
     }
 
-    return { row, col, cellId };
+    return { lat, lon, xMeters, yMeters, row, col, cellId, order: selectedOrder }; // Added more return values
+}
+
+function displayAlgorithmSteps({ lat, lon, xMeters, yMeters, row, col, cellId, order }) {
+    document.getElementById('algo-val-latlon').textContent = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lon).toFixed(6)}`;
+    document.getElementById('algo-val-xmeters').textContent = parseFloat(xMeters).toFixed(2);
+    document.getElementById('algo-val-ymeters').textContent = parseFloat(yMeters).toFixed(2);
+    document.getElementById('algo-val-colrow').textContent = `${col}, ${row}`;
+    document.getElementById('algo-val-order').textContent = order;
+    document.getElementById('algo-val-finalcellid').textContent = cellId;
 }
 
 function showStatusMessage(message, type = "info") { // type can be 'info', 'success', 'error'
@@ -483,22 +493,25 @@ document.getElementById("use-location").addEventListener("click", () => {
 });
 
 document.getElementById("submit-coords").addEventListener("click", () => {
+    if (loadingSpinner) loadingSpinner.style.display = "block"; // Show spinner
+
     const lat = parseFloat(latitudeInput.value);
     const lon = parseFloat(longitudeInput.value);
 
     if (isNaN(lat) || isNaN(lon)) {
         showStatusMessage("Please enter valid latitude and longitude values.", "error");
+        if (loadingSpinner) loadingSpinner.style.display = "none"; // Hide spinner on error
         return;
     }
 
-    const { row, col, cellId } = latLonToCell(lat, lon); // row and col are absolute here
+    const cellData = latLonToCell(lat, lon); // New call, gets all data
 
     // Store for re-highlighting on toggle change
-    lastTargetCol = col;
-    lastTargetRow = row;
+    lastTargetCol = cellData.col;
+    lastTargetRow = cellData.row;
 
     if (mapToggle.checked) {
-        drawMinMaxOnLeaflet(row, col, lat, lon);
+        drawMinMaxOnLeaflet(cellData.row, cellData.col, cellData.lat, cellData.lon);
         gridContainer.style.display = "none";
         leafletMapContainer.style.display = "block";
         if (leafletMap) leafletMap.invalidateSize();
@@ -506,8 +519,8 @@ document.getElementById("submit-coords").addEventListener("click", () => {
         if(zoomedLobby) zoomedLobby.style.display = 'none';
         if (visibleLobbiesListDisplay) visibleLobbiesListDisplay.textContent = "N/A (Map View)"; // Update info panel
     } else {
-        createGrid(col, row);
-        highlightGrid(col, row); // This will update visibleLobbiesListDisplay
+        createGrid(cellData.col, cellData.row);
+        highlightGrid(cellData.col, cellData.row); // This will update visibleLobbiesListDisplay
         gridContainer.style.display = "grid";
         leafletMapContainer.style.display = "none";
         if(zoomedLobbyHeader) zoomedLobbyHeader.style.display = 'block';
@@ -515,26 +528,29 @@ document.getElementById("submit-coords").addEventListener("click", () => {
     }
 
     // These are common regardless of view
-    updateInfo({ row, col, cellId, lat, lon });
-    renderZoomedLobby(row, col); // This is for the abstract view, still updates but might be hidden
+    updateInfo({ row: cellData.row, col: cellData.col, cellId: cellData.cellId, lat: cellData.lat, lon: cellData.lon });
+    renderZoomedLobby(cellData.row, cellData.col); // This is for the abstract view, still updates but might be hidden
+    displayAlgorithmSteps(cellData); // New call to display algorithm steps
     showStatusMessage("Grid and information updated for the submitted coordinates.", "success");
+
+    if (loadingSpinner) loadingSpinner.style.display = "none"; // Hide spinner at the end
 });
 
 orderSelect.addEventListener("change", () => {
-    const latInput = document.getElementById("latitude").value;
-    const lonInput = document.getElementById("longitude").value;
+    const latInputVal = latitudeInput.value; // Renamed to avoid conflict
+    const lonInputVal = longitudeInput.value; // Renamed to avoid conflict
 
-    if (latInput && lonInput) { // Only if there are values to process
-        const lat = parseFloat(latInput);
-        const lon = parseFloat(lonInput);
+    if (latInputVal && lonInputVal) { // Only if there are values to process
+        const lat = parseFloat(latInputVal);
+        const lon = parseFloat(lonInputVal);
 
         if (!isNaN(lat) && !isNaN(lon)) {
             // Recalculate cell data with new order
-            const { row, col, cellId } = latLonToCell(lat, lon);
-            // Update info panel (this will show new cellId and potentially new dbPath)
-            updateInfo({ row, col, cellId, lat, lon });
-            // Re-render zoomed lobby (Cell IDs displayed there will change)
-            renderZoomedLobby(row, col);
+            const cellData = latLonToCell(lat, lon); // Gets all data including new cellId and order
+
+            updateInfo({ row: cellData.row, col: cellData.col, cellId: cellData.cellId, lat: cellData.lat, lon: cellData.lon });
+            renderZoomedLobby(cellData.row, cellData.col);
+            displayAlgorithmSteps(cellData); // Update algorithm steps display
             // Tooltips will automatically update on next mouseover due to direct reading of orderSelect.value
             // No need to call createGrid() or highlightGrid() as the visual grid display (colors, borders) doesn't change based on cell ID calculation method.
         }
@@ -556,6 +572,8 @@ document.querySelectorAll(".preset-btn").forEach(button => {
 });
 
 mapToggle.addEventListener("change", function() {
+    if (loadingSpinner) loadingSpinner.style.display = "block"; // Show spinner
+
     if (this.checked) {
         gridContainer.style.display = "none";
         zoomedLobbyHeader.style.display = "none";
@@ -586,6 +604,7 @@ mapToggle.addEventListener("change", function() {
             if (visibleLobbiesListDisplay) visibleLobbiesListDisplay.textContent = "N/A (Grid not yet loaded)";
         }
     }
+    if (loadingSpinner) loadingSpinner.style.display = "none"; // Hide spinner at the end
 });
 
 // Event listener for the new "Go to Cell ID" button
