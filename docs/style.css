@@ -118,12 +118,17 @@ h1 {
 
 /* Surrounding cells (direct neighbors of the target cell) */
 .cell.surrounding {
-    background-color: #ADD8E6; /* Light blue - should override lobby-zone-cell */
+    background-color: #1e90ff; /* DodgerBlue - a brighter blue */
+    border: 1px solid #104e8b; /* Darker blue border */
 }
 
 /* Center cell (target cell) */
 .cell.center {
-    background-color: #4caf50; /* Green - should override all other backgrounds */
+    background-color: #ff4500; /* OrangeRed - for more vibrancy */
+    border: 1px solid #cc3700; /* Darker border */
+    transform: scale(1.1); /* Slightly larger */
+    z-index: 10; /* Ensure it's above others if overlapping slightly due to scale */
+    box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Add a subtle shadow */
 }
 
 /* Old .cell.lobby class, can be removed if no longer used, or kept if it serves another purpose.
@@ -133,10 +138,75 @@ h1 {
 }
 
 #info-panel {
-    background: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 80px; /* Adjusted to give space from top */
+    right: 20px; /* Adjusted for some padding from edge */
+    width: 300px; /* Standardized width */
+    background: #ffffff;
+    padding: 15px 20px; /* Adjusted padding */
+    border-radius: 8px; /* Softer edges */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15); /* More pronounced shadow */
+    z-index: 1000; /* Ensure it's above other elements like the grid */
+    border: 1px solid #ddd; /* Lighter border */
+    font-size: 14px; /* Slightly smaller base font for the panel */
+}
+
+#info-panel h3 {
+    margin-top: 0;
+    margin-bottom: 15px; /* More space after title */
+    font-size: 1.1em; /* Adjusted title size */
+    color: #007bff; /* Consistent with button color */
+    border-bottom: 1px solid #eee; /* Separator line */
+    padding-bottom: 10px; /* Space for the separator */
+}
+
+.info-row {
+    display: flex; /* For layout */
+    justify-content: space-between; /* Pushes button to the right */
+    align-items: center;
+    margin-bottom: 10px; /* Spacing between rows */
+    padding: 5px 0; /* Padding within row */
+}
+
+.info-row span:first-child { /* The label like "Cell ID:" */
+    font-weight: 500; /* Medium weight for labels */
+    color: #555; /* Dark gray for labels */
+    margin-right: 8px;
+}
+
+.info-row span:nth-child(2) { /* The value span */
+    flex-grow: 1; /* Allows value to take available space */
+    text-align: left; /* Align value text to left */
+    color: #333; /* Standard text color for values */
+    word-break: break-all; /* Break long IDs or paths */
+}
+
+.copy-btn {
+    padding: 4px 8px; /* Smaller padding */
+    font-size: 0.9em; /* Smaller font */
+    background-color: #e9ecef; /* Light gray background */
+    color: #495057; /* Dark text color */
+    border: 1px solid #ced4da; /* Subtle border */
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px; /* Space from the value */
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.copy-btn:hover {
+    background-color: #d1d9e0; /* Slightly darker on hover */
+    border-color: #adb5bd;
+}
+
+/* Responsive adjustments for the info panel */
+@media (max-width: 768px) { /* Adjust breakpoint as needed */
+    #info-panel {
+        position: static; /* Becomes part of normal flow */
+        width: auto; /* Full width */
+        margin-top: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Less pronounced shadow for static */
+    }
 }
 
 .lobby-border {

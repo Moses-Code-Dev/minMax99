@@ -10,6 +10,7 @@
 <body>
 <h1>🌍 MinMax99 Spatial Explorer</h1>
 <div id="status-message"></div>
+<div id="loading-spinner" style="display: none; text-align: center; padding: 10px;">Loading...</div>
 <p>Enter your coordinates or use GPS to discover your Cell ID and Lobby.</p>
 
 <div id="controls">
@@ -63,7 +64,17 @@
     <p><strong>Visible Lobbies (9-Zone):</strong> <span id="visible-lobbies-list">N/A</span></p>
 </div>
 
-<script src="script.js"></script>
+<div id="algorithm-visualization-container" style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 8px;">
+    <h2 style="margin-top: 0;">Algorithm Conversion Steps</h2>
+    <div id="algo-step-latlon" style="margin-bottom: 5px;"><strong>Input Lat/Lon:</strong> <span id="algo-val-latlon">N/A</span></div>
+    <div id="algo-step-xmeters" style="margin-bottom: 5px;"><strong>X Meters:</strong> <span id="algo-val-xmeters">N/A</span></div>
+    <div id="algo-step-ymeters" style="margin-bottom: 5px;"><strong>Y Meters:</strong> <span id="algo-val-ymeters">N/A</span></div>
+    <div id="algo-step-colrow" style="margin-bottom: 5px;"><strong>Calculated Col/Row:</strong> <span id="algo-val-colrow">N/A</span></div>
+    <div id="algo-step-finalcellid"><strong>Final Cell ID (Order: <span id="algo-val-order">N/A</span>):</strong> <span id="algo-val-finalcellid">N/A</span></div>
+</div>
+
+<script type="module" src="infoPanel.js"></script>
+<script src="script.js" type="module"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </body>
 </html>

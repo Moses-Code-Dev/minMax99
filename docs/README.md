@@ -12,8 +12,8 @@ The MinMax99 Spatial Explorer is an interactive webpage designed to help users v
 The primary display is a dynamic 100x100 grid of MinMax99 cells, representing a 50km x 50km area.
 *   **Centering:** The grid automatically centers on the MinMax99 cell corresponding to the submitted coordinates.
 *   **Cell Highlighting:**
-    *   **Target Cell:** The selected cell is highlighted in **green**.
-    *   **Surrounding Cells:** The 8 immediate neighbors of the target cell are highlighted in **light blue**.
+    *   **Target Cell:** The selected cell is highlighted distinctly (e.g., **OrangeRed**) and slightly enlarged for prominence.
+    *   **Surrounding Cells:** The 8 immediate neighbors of the target cell are highlighted in a contrasting color (e.g., **DodgerBlue**).
     *   **Current Lobby Outline:** The 20x20 cell lobby (10km x 10km) containing the target cell is outlined in **red**.
     *   **3x3 Lobby Zone:** The larger 3x3 zone of lobbies (60x60 cells or 30km x 30km) centered around the target's lobby is given a subtle background tint for context.
 *   **Tooltips:** Hovering over any cell in the grid displays a tooltip with:
@@ -23,7 +23,7 @@ The primary display is a dynamic 100x100 grid of MinMax99 cells, representing a 
     *   Firebase-style Database Path (e.g., `/lobby/X_Y/cell_...`)
 
 ### 3. Information Panel
-Below the grid, an information panel provides detailed data for the target cell:
+A fixed panel (typically on the side of the screen, or statically positioned on smaller screens) provides detailed data for the target cell. Each piece of information can be easily copied to the clipboard using dedicated "Copy" buttons.
 *   **Cell ID:** Global identifier.
 *   **Cell X,Y:** Absolute column and row.
 *   **Geo (Lat, Lon):** The input coordinates.
@@ -32,6 +32,11 @@ Below the grid, an information panel provides detailed data for the target cell:
 
 ### 4. Zoomed Lobby View
 A separate section displays a 20x20 grid representing the current lobby, with each cell showing its global Cell ID. This view is hidden when the Leaflet Map View is active.
+
+### 5. Algorithm Conversion Visualization
+*   Below the main grid/map area, a dedicated section displays the step-by-step conversion from geographic coordinates (Latitude, Longitude) to the final MinMax99 Cell ID.
+*   This includes intermediate values such as calculated X/Y meters and the absolute column/row.
+*   The displayed Cell ID also updates based on the selected Cell ID Order (Column-Major or Row-Major).
 
 ## Advanced Features
 
@@ -56,7 +61,7 @@ A separate section displays a 20x20 grid representing the current lobby, with ea
 1.  Enter Latitude and Longitude values in the input fields.
 2.  Alternatively, click "📍 Use My Location" to use your browser's GPS.
 3.  Click "Submit".
-4.  Explore the grid: hover over cells for tooltips, observe highlighting.
+4.  Explore the grid: hover over cells for tooltips, observe highlighting. A loading indicator will briefly appear during data processing and map/grid updates.
 5.  Review details in the Info Panel and Zoomed Lobby View.
 6.  Optionally, switch Cell ID order, try preset locations, or toggle the Leaflet Map View for a different perspective.
 7.  Use the status messages at the top for feedback on actions.
